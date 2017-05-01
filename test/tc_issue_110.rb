@@ -1,6 +1,6 @@
 
 require_relative 'spec_helper'
-require 'diffy'
+require 'diffy'  # NOTE!!! You'll need to gem install diffy for this file to work!
 
 class TestIssue110 < Minitest::Test
 
