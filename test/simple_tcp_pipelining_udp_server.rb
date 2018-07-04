@@ -11,8 +11,8 @@ class SimpleTCPPipeliningUDPServer < Async::DNS::Server
   def initialize(**options)
     super(options)
 
-    @handlers << TcpPipelineHandler.new(self, IP, PORT)
-    @handlers << Async::DNS::UDPServerHandler.new(self, IP, PORT)
+    # @handlers << TcpPipelineHandler.new(self, IP, PORT)
+    # @handlers << Async::DNS::UDPServerHandler.new(self, IP, PORT)
 
   end
 

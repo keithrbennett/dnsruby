@@ -35,7 +35,7 @@ class TCPPipeliningServer < Async::DNS::Server
   def initialize(**options)
     super(options)
 
-    @handlers << NioTcpPipeliningHandler.new(self, IP, PORT, DEFAULT_MAX_REQUESTS, DEFAULT_TIMEOUT) #4 max request
+    # @handlers << NioTcpPipeliningHandler.new(self, IP, PORT, DEFAULT_MAX_REQUESTS, DEFAULT_TIMEOUT) #4 max request
   end
 
 
