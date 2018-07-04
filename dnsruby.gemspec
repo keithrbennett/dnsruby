@@ -36,9 +36,6 @@ DNSSEC NSEC3 support.'
   s.add_development_dependency 'rubydns', '2.0.1'
   s.add_development_dependency 'nio4r', '>= 2.0'
   s.add_development_dependency 'minitest-display', '>= 0.3.0'
-
-  if RUBY_VERSION >= "1.9.3"
-    s.add_development_dependency 'coveralls', '~> 0.7'
-  end
+  s.add_development_dependency 'coveralls', '~> 0.7'
 end
 
