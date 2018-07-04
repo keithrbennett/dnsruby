@@ -19,7 +19,7 @@ require_relative 'spec_helper'
 # require_relative 'tc_single_resolver'
 require_relative 'tc_soak_base'
 require_relative 'test_dnsserver'
-require_relative 'localdns'
+require_relative 'simple_tcp_pipelining_udp_server'
 
 # This class tries to soak test the Dnsruby library.
 # It can't do this very well, owing to the small number of sockets allowed to be open simultaneously.
@@ -38,7 +38,7 @@ class TestSingleResolverSoak < Minitest::Test
 
   def setup
     # Instantiate a local dns server
-    pipe = IO.popen("./test/localdns.rb")
+    pipe = IO.popen("./test/simple_tcp_pipelining_udp_server.rb")
     @dnspid = pipe.pid
     sleep 1
   end
