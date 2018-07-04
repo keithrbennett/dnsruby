@@ -183,7 +183,7 @@ class NioTcpPipeliningHandler < Async::DNS::GenericHandler
   end
 
   def run(reactor: Async::Task.current.reactor)
-    @selector_threead = create_selector_thread
+    @selector_thread = create_selector_thread
   end
 
   def accept
