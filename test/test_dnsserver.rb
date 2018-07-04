@@ -14,6 +14,7 @@
 # limitations under the License.
 # ++
 
+require 'async'
 require 'rubydns'
 require 'nio'
 require 'socket'
