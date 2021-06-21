@@ -106,7 +106,7 @@ class TestTcp < Minitest::Test
             rr = msg.get_rr
             if (rr.type == Dnsruby::Types::TSIG)
               if (count!=o.header.arcount-1)
-                Dnsruby.log.Error("Incoming message has TSIG record before last record")
+                Logging.log.error("Incoming message has TSIG record before last record")
                 raise Dnsruby::DecodeError.new("TSIG record present before last record")
               end
               o.tsigstart = start # needed for TSIG verification

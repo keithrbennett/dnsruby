@@ -17,8 +17,7 @@
 
 require 'dnsruby/packet_sender'
 require 'dnsruby/recursor'
-
-include Dnsruby
+require_relative 'logging'
 
 module Dnsruby
   #  == Description
@@ -73,6 +72,9 @@ module Dnsruby
   #  Dnsruby runs a pure Ruby event loop to handle I/O in a single thread.
   #  Support for EventMachine has been deprecated.
   class Resolver
+
+    include Dnsruby
+
     DefaultQueryTimeout = 0
     DefaultPacketTimeout = 5
     DefaultRetryTimes = 1
@@ -248,7 +250,7 @@ module Dnsruby
     #      # ...
     #    end
     def send_message(message)
-      Dnsruby.log.debug{'Resolver : sending message'}
+      Logging.log.debug{'Resolver : sending message'}
       q = Queue.new
       send_async(message, q)
 
@@ -326,7 +328,7 @@ module Dnsruby
     #      process_response(response)
     #    end
     def send_plain_message(message)
-      Dnsruby::TheLog.debug('Resolver : send_plain_message')
+      Logging.log.debug('Resolver : send_plain_message')
       message.do_caching = false
       message.do_validation = false
       message.send_raw = true
@@ -448,7 +450,8 @@ module Dnsruby
       @do_caching = true
       @config = Config.new()
       reset_attributes
-
+      Dnsruby.log.error('hello, Keith')
+      Logging.log_and_raise('hello, Keith')
       #  Process args
       if args.length == 1
         if args[0].class == Hash
@@ -464,7 +467,7 @@ module Dnsruby
                 send(key.to_s + '=', args[0][key])
               end
             rescue Exception => e
-              Dnsruby.log.error{"Argument #{key} not valid : #{e}\n"}
+              Logging.log.error{"Argument #{key} not valid : #{e}\n"}
             end
           end
         elsif args[0].class == String
@@ -669,7 +672,7 @@ module Dnsruby
       if Resolver.port_in_range(p)
         return ! ((p == 0) && (src_port.length > 0))
       else
-        Dnsruby.log.error("Illegal port (#{p})")
+        Logging.log.error("Illegal port (#{p})")
         log_and_raise("Illegal port #{p}", ArgumentError)
       end
     end
@@ -749,13 +752,13 @@ module Dnsruby
             tsig = RR.new_from_hash(create_tsig_options(*args[0]))
           end
         else
-          #           Dnsruby.log.debug{'TSIG signing switched off'}
+          #           Logging.log.debug{'TSIG signing switched off'}
           return nil
         end
       else
         tsig = RR.new_from_hash(create_tsig_options(args))
       end
-      Dnsruby.log.info{"TSIG signing now using #{tsig.name}, key=#{tsig.key}"}
+      Logging.log.info{"TSIG signing now using #{tsig.name}, key=#{tsig.key}"}
       tsig
     end
 
@@ -887,7 +890,7 @@ module Dnsruby
       end
 
       unless msg.kind_of?Message
-        Dnsruby.log.error{'Wrong type for msg in Resolver# send_async'}
+        Logging.log.error{'Wrong type for msg in Resolver# send_async'}
         #  @TODO@ Handle different queue tuples - push this to generic send_error method
         client_queue.push([client_query_id, ArgumentError.new("Wrong type of msg passed to Dnsruby::Resolver# send_async - should have been Message, was #{msg.class}")])
         return
@@ -896,7 +899,7 @@ module Dnsruby
       begin
         msg.encode
       rescue EncodeError => err
-        Dnsruby.log.error { "Can't encode " + msg.to_s + " : #{err}" }
+        Logging.log.error { "Can't encode " + msg.to_s + " : #{err}" }
         client_queue.push([client_query_id, err])
         return
       end
@@ -907,7 +910,7 @@ module Dnsruby
       @parent.single_res_mutex.synchronize {
         tick_needed = true if @query_list.empty?
         if @query_list.has_key?(client_query_id)
-          Dnsruby.log.error("Duplicate query id requested (#{client_query_id}")
+          Logging.log.error("Duplicate query id requested (#{client_query_id}")
           #  @TODO@ Handle different queue tuples - push this to generic send_error method
           client_queue.push([client_query_id, ArgumentError.new('Client query ID already in use')])
           return
@@ -1008,7 +1011,7 @@ module Dnsruby
               #  Send the next query
               res, retry_count = timeouts[timeout]
               id = [res, msg, client_query_id, retry_count]
-              Dnsruby.log.debug("Sending msg to #{res.server}")
+              Logging.log.debug("Sending msg to #{res.server}")
               #  We should keep a list of the queries which are outstanding
               outstanding.push(id)
               timeouts_done.push(timeout)
@@ -1073,14 +1076,14 @@ module Dnsruby
       @parent.single_res_mutex.synchronize {
         if @query_list[client_query_id] == nil
           #           print "Dead query response - ignoring\n"
-          Dnsruby.log.debug{'Ignoring response for dead query'}
+          Logging.log.debug{'Ignoring response for dead query'}
           return
         end
         _msg, _client_queue, _select_queue, outstanding = @query_list[client_query_id]
         if event_type == Resolver::EventType::RECEIVED ||
               event_type == Resolver::EventType::ERROR
           unless outstanding.include?(id)
-            Dnsruby.log.error("Query id not on outstanding list! #{outstanding.length} items. #{id} not on #{outstanding}")
+            Logging.log.error("Query id not on outstanding list! #{outstanding.length} items. #{id} not on #{outstanding}")
           end
           outstanding.delete(id)
         end
@@ -1092,7 +1095,7 @@ module Dnsruby
           else # if event.kind_of?(Message)
             handle_response(queue, event_id, response)
             #       else
-            #         Dnsruby.log.error('Random object #{event.class} returned through queue to Resolver')
+            #         Logging.log.error('Random object #{event.class} returned through queue to Resolver')
           end
         elsif event_type == Resolver::EventType::VALIDATED
           if error
@@ -1112,7 +1115,7 @@ module Dnsruby
     def handle_error_response(select_queue, query_id, error, response) # :nodoc: all
       #  Handle an error
       #       @mutex.synchronize{
-      Dnsruby.log.debug{"handling error #{error.class}, #{error}"}
+      Logging.log.debug{"handling error #{error.class}, #{error}"}
       #  Check what sort of error it was :
       resolver, _msg, client_query_id, _retry_count = query_id
       _msg, client_queue, select_queue, outstanding = @query_list[client_query_id]
@@ -1125,7 +1128,7 @@ module Dnsruby
         decrement_resolver_priority(resolver)
         timeouts = @timeouts[client_query_id]
         if outstanding.empty? && timeouts && timeouts[1].values.empty?
-          Dnsruby.log.debug{'Sending timeout to client'}
+          Logging.log.debug{'Sending timeout to client'}
           send_result_and_stop_querying(client_queue, client_query_id, select_queue, response, error)
         end
       elsif error.kind_of?(NXDomain)
@@ -1135,14 +1138,14 @@ module Dnsruby
         stop_querying(client_query_id)
         #  @TODO@ Does the client want notified at this point?
       elsif error.kind_of?(EncodeError)
-        Dnsruby.log.debug{'Encode error - sending to client'}
+        Logging.log.debug{'Encode error - sending to client'}
         send_result_and_stop_querying(client_queue, client_query_id, select_queue, response, error)
       else
         #    - if it was any other error, then remove that server from the list for that query
         #    If a Too Many Open Files error, then don't remove, but let retry work.
         timeouts = @timeouts[client_query_id]
         unless error.to_s =~ /Errno::EMFILE/
-          Dnsruby.log.debug{"Removing #{resolver.server} from resolver list for this query"}
+          Logging.log.debug{"Removing #{resolver.server} from resolver list for this query"}
           if timeouts
             timeouts[1].each do |key, value|
               res = value[0]
@@ -1154,12 +1157,12 @@ module Dnsruby
           #  Also stick it to the back of the list for future queries
           demote_resolver(resolver)
         else
-          Dnsruby.log.debug("NOT Removing #{resolver.server} due to Errno::EMFILE")
+          Logging.log.debug("NOT Removing #{resolver.server} due to Errno::EMFILE")
         end
         #         - if it was the last server, then return an error to the client (and clean up)
         if outstanding.empty? && ((!timeouts) || (timeouts && timeouts[1].values.empty?))
           #           if outstanding.empty?
-          Dnsruby.log.debug{'Sending error to client'}
+          Logging.log.debug{'Sending error to client'}
           send_result_and_stop_querying(client_queue, client_query_id, select_queue, response, error)
         end
       end
@@ -1204,7 +1207,7 @@ module Dnsruby
     def handle_response(select_queue, query_id, response) # :nodoc: all
       #  Handle a good response
       #  Should also stick resolver more to the front of the list for future queries
-      Dnsruby.log.debug('Handling good response')
+      Logging.debug('Handling good response')
       resolver, _msg, client_query_id, _retry_count = query_id
       increment_resolver_priority(resolver) unless response.cached
       #       @mutex.synchronize{

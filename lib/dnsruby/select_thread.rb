@@ -23,6 +23,8 @@ end
 require 'set'
 require 'singleton'
 require 'dnsruby/validator_thread.rb'
+require 'dnsruby/logging'
+
 module Dnsruby
   class SelectThread #:nodoc: all
     class SelectWakeup < RuntimeError; end

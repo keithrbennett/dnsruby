@@ -133,30 +133,7 @@ module Dnsruby
     return VERSION
   end
 
-  @@logger = Logger.new(STDOUT)
-  @@logger.level = Logger::FATAL
-  # Get the log for Dnsruby
-  # Use this to set the log level
-  # e.g. Dnsruby.log.level = Logger::INFO
-  def Dnsruby.log
-    @@logger
-  end
-
-
-  #  Logs (error level) and raises an error.
-  def log_and_raise(object, error_class = RuntimeError)
-    if object.is_a?(Exception)
-      error = object
-      Dnsruby.log.error(error.inspect)
-      raise error
-    else
-      message = object.to_s
-      Dnsruby.log.error(message)
-      raise error_class.new(message)
-    end
-  end; module_function :log_and_raise
-
-  # An error raised while querying for a resource
+    # An error raised while querying for a resource
   class ResolvError < StandardError
     attr_accessor :response
   end
